@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oh Well Scorekeeper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        .container {
+            max-width: 600px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        .increment-btn, .decrement-btn {
+            background-color: #e5e7eb;
+            color: #4b5563;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 9999px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        .increment-btn:hover, .decrement-btn:hover {
+            background-color: #d1d5db;
+        }
+        .score-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 0.5rem;
+        }
+        .score-table th, .score-table td {
+            padding: 0.75rem;
+            text-align: center;
+        }
+        .score-table th {
+            font-weight: 700;
+            color: #4b5563;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+        }
+        .score-table td {
+            background-color: #f9fafb;
+            border-radius: 0.5rem;
+            font-weight: 500;
+        }
+        .score-table tr.total-row td {
+            background-color: #e0f2fe;
+            font-weight: 700;
+            color: #1e40af;
+        }
+        .remove-player-btn {
+            background-color: #ef4444;
+            color: white;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 9999px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .remove-player-btn:hover {
+            background-color: #dc2626;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div id="app" class="container mx-auto">
+        <!-- Main title -->
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Oh Well Scorekeeper</h1>
+
+        <!-- Player Setup Screen -->
+        <div id="setup-screen" class="card mx-4">
+            <h2 class="text-2xl font-semibold mb-4 text-center">Set up New Game</h2>
+            <p class="text-gray-600 text-center mb-6">Enter player names and select game length.</p>
+            
+            <div id="player-inputs" class="space-y-4">
+                <!-- Player 1 -->
+                <div class="flex items-center space-x-2 player-input-row">
+                    <span class="text-lg font-medium text-gray-700 w-20">Player 1:</span>
+                    <input type="text" id="player-name-1" placeholder="Enter name" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <!-- Player 2 -->
+                <div class="flex items-center space-x-2 player-input-row">
+                    <span class="text-lg font-medium text-gray-700 w-20">Player 2:</span>
+                    <input type="text" id="player-name-2" placeholder="Enter name" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            
+            <button id="add-player-btn" class="mt-4 w-full bg-blue-500 text-white font-bold py-2 rounded-lg hover:bg-blue-600 transition duration-200">
+                Add Player
+            </button>
+            
+            <!-- Game length input -->
+            <div class="mt-6 flex items-center space-x-2">
+                <span class="text-lg font-medium text-gray-700 w-40">Max Cards Per Round:</span>
+                <input type="number" id="max-cards-input" value="10" min="1" max="17" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <button id="start-game-btn" class="mt-6 w-full bg-indigo-600 text-white font-bold py-3 rounded-lg shadow-lg hover:bg-indigo-700 transition duration-200">
+                Start Game
+            </button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="round-title" class="text-2xl font-semibold text-gray-800"></h2>
+                <span class="bg-indigo-100 text-indigo-800 font-bold py-2 px-4 rounded-full">
+                    <span id="cards-dealt-display"></span> cards
+                </span>
+            </div>
+
+            <!-- Player Scores and Bids -->
+            <div id="players-container" class="space-y-4 mb-8">
+                <!-- Player cards will be injected here by JavaScript -->
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex space-x-4">
+                <button id="new-game-btn" class="flex-1 bg-red-500 text-white font-bold py-3 rounded-lg shadow-lg hover:bg-red-600 transition duration-200">
+                    New Game
+                </button>
+                <button id="next-round-btn" class="flex-1 bg-green-600 text-white font-bold py-3 rounded-lg shadow-lg hover:bg-green-700 transition duration-200">
+                    Next Round
+                </button>
+            </div>
+            
+            <!-- Running Score Table -->
+            <div id="score-table-container" class="mt-8 card hidden">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Running Score</h3>
+                <!-- Score table will be generated here -->
+            </div>
+        </div>
+
+        <!-- Pop-up for Messages -->
+        <div id="modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4">
+            <div class="card w-full max-w-sm text-center">
+                <p id="modal-message" class="text-lg font-semibold text-gray-800 mb-4"></p>
+                <button id="modal-ok-btn" class="w-full bg-indigo-600 text-white font-bold py-2 rounded-lg hover:bg-indigo-700 transition duration-200">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // DOM Elements
+        const setupScreen = document.getElementById('setup-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const playerInputs = document.getElementById('player-inputs');
+        const addPlayerBtn = document.getElementById('add-player-btn');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const playersContainer = document.getElementById('players-container');
+        const nextRoundBtn = document.getElementById('next-round-btn');
+        const newGameBtn = document.getElementById('new-game-btn');
+        const roundTitle = document.getElementById('round-title');
+        const cardsDealtDisplay = document.getElementById('cards-dealt-display');
+        const scoreTableContainer = document.getElementById('score-table-container');
+        const modal = document.getElementById('modal');
+        const modalMessage = document.getElementById('modal-message');
+        const modalOkBtn = document.getElementById('modal-ok-btn');
+        const maxCardsInput = document.getElementById('max-cards-input');
+
+        // Game State
+        let players = [];
+        let currentPlayerCount = 2;
+        let currentRound = 0;
+        let cardsPerRound = [];
+        const MIN_CARDS = 1;
+
+        // Utility functions
+        function showModal(message) {
+            modalMessage.textContent = message;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function hideModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // --- Player persistence and management ---
+        function savePlayerNames() {
+            const names = [];
+            const nameInputs = document.querySelectorAll('.player-input-row input[type="text"]');
+            nameInputs.forEach(input => {
+                names.push(input.value.trim());
+            });
+            localStorage.setItem('ohWellPlayerNames', JSON.stringify(names));
+        }
+
+        function loadPlayerNames() {
+            const savedNames = localStorage.getItem('ohWellPlayerNames');
+            if (savedNames) {
+                const names = JSON.parse(savedNames);
+                if (names.length > 2) {
+                    for (let i = 2; i < names.length; i++) {
+                        addPlayerInput(names[i]);
+                    }
+                }
+                document.getElementById('player-name-1').value = names[0] || '';
+                document.getElementById('player-name-2').value = names[1] || '';
+            }
+        }
+        
+        function addPlayerInput(name = '') {
+            currentPlayerCount++;
+            const newPlayerInput = document.createElement('div');
+            newPlayerInput.className = 'flex items-center space-x-2 player-input-row';
+            newPlayerInput.innerHTML = `
+                <span class="text-lg font-medium text-gray-700 w-20">Player ${currentPlayerCount}:</span>
+                <input type="text" id="player-name-${currentPlayerCount}" placeholder="Enter name" value="${name}" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <button class="remove-player-btn" type="button" aria-label="Remove player">&times;</button>
+            `;
+            playerInputs.appendChild(newPlayerInput);
+            
+            // Add event listener to the new remove button
+            newPlayerInput.querySelector('.remove-player-btn').addEventListener('click', (e) => {
+                removePlayerInput(e.target.closest('.player-input-row'));
+            });
+            updatePlayerLabels();
+        }
+
+        function removePlayerInput(element) {
+            if (currentPlayerCount > 2) {
+                element.remove();
+                currentPlayerCount--;
+                updatePlayerLabels();
+                savePlayerNames();
+            } else {
+                showModal('Cannot remove players. A minimum of two players is required.');
+            }
+        }
+
+        function updatePlayerLabels() {
+            const rows = document.querySelectorAll('.player-input-row');
+            rows.forEach((row, index) => {
+                row.querySelector('span').textContent = `Player ${index + 1}:`;
+            });
+        }
+        
+        // Event Listeners
+        addPlayerBtn.addEventListener('click', () => {
+            addPlayerInput();
+        });
+
+        // Add initial remove buttons to the first two players
+        document.querySelectorAll('.player-input-row').forEach(row => {
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-player-btn';
+            removeBtn.type = 'button';
+            removeBtn.textContent = '×';
+            removeBtn.ariaLabel = 'Remove player';
+            removeBtn.addEventListener('click', (e) => {
+                removePlayerInput(e.target.closest('.player-input-row'));
+            });
+            // Only add remove buttons to the first two if there are more than 2 players initially
+            if (currentPlayerCount > 2) {
+                row.appendChild(removeBtn);
+            }
+        });
+
+
+        startGameBtn.addEventListener('click', () => {
+            players = [];
+            let allNamesEntered = true;
+            const nameInputs = document.querySelectorAll('.player-input-row input[type="text"]');
+            nameInputs.forEach(input => {
+                const name = input.value.trim();
+                if (name === '') {
+                    allNamesEntered = false;
+                }
+                players.push({
+                    name: name,
+                    roundData: [],
+                    totalScore: 0
+                });
+            });
+
+            const maxCards = parseInt(maxCardsInput.value, 10);
+            if (isNaN(maxCards) || maxCards < 1) {
+                showModal('Please enter a valid number of max cards (1 or more).');
+                return;
+            }
+
+            if (allNamesEntered) {
+                savePlayerNames();
+                // Initialize cardsPerRound sequence based on user input
+                cardsPerRound = [];
+                for (let i = 1; i <= maxCards; i++) cardsPerRound.push(i);
+                for (let i = maxCards - 1; i >= MIN_CARDS; i--) cardsPerRound.push(i);
+
+                currentRound = 0;
+                setupScreen.classList.add('hidden');
+                gameScreen.classList.remove('hidden');
+                updateUI();
+            } else {
+                showModal('Please enter a name for all players.');
+            }
+        });
+
+        nextRoundBtn.addEventListener('click', () => {
+            calculateScores();
+            currentRound++;
+            if (currentRound >= cardsPerRound.length) {
+                endGame();
+            } else {
+                updateUI();
+            }
+        });
+        
+        newGameBtn.addEventListener('click', () => {
+            window.location.reload(); // Simple way to restart the app
+        });
+
+        modalOkBtn.addEventListener('click', hideModal);
+
+        // Core Game Logic
+        function calculateScores() {
+            const currentRoundIndex = currentRound;
+            const numCards = cardsPerRound[currentRoundIndex];
+            
+            let totalBids = 0;
+            let totalTricks = 0;
+            
+            players.forEach(player => {
+                const bidInput = document.getElementById(`bid-${player.name.replace(/\s+/g, '-')}-${currentRoundIndex}`);
+                const tricksInput = document.getElementById(`tricks-${player.name.replace(/\s+/g, '-')}-${currentRoundIndex}`);
+
+                const bid = parseInt(bidInput.value, 10);
+                const tricks = parseInt(tricksInput.value, 10);
+
+                totalBids += bid;
+                totalTricks += tricks;
+
+                let score = 0;
+                if (bid === tricks) {
+                    score = 10 + bid;
+                } else {
+                    score = tricks; // New rule: score is tricks taken
+                }
+                player.roundData.push({ bid, tricks, score });
+                player.totalScore += score;
+            });
+        }
+
+        function endGame() {
+            let winner = players[0];
+            let ties = [];
+            let winningScore = winner.totalScore;
+            
+            players.forEach(player => {
+                if (player.totalScore > winningScore) {
+                    winner = player;
+                    winningScore = player.totalScore;
+                    ties = [];
+                } else if (player.totalScore === winningScore) {
+                    ties.push(player);
+                }
+            });
+
+            if (ties.length > 0) {
+                const tieNames = ties.map(p => p.name).join(', ');
+                showModal(`Game Over! It's a tie between ${winner.name} and ${tieNames} with ${winningScore} points!`);
+            } else {
+                showModal(`Game Over! The winner is ${winner.name} with ${winningScore} points!`);
+            }
+        }
+
+        // UI Rendering
+        function updateUI() {
+            const numCards = cardsPerRound[currentRound];
+            roundTitle.textContent = `Round ${currentRound + 1}`;
+            cardsDealtDisplay.textContent = numCards;
+            
+            playersContainer.innerHTML = '';
+            players.forEach(player => {
+                const playerCard = createPlayerCard(player, currentRound, numCards);
+                playersContainer.appendChild(playerCard);
+            });
+            updateScoreTable();
+        }
+
+        function createPlayerCard(player, roundIndex, maxVal) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">${player.name}</h3>
+                    <span class="text-lg font-bold text-indigo-600">
+                        Score: ${player.totalScore}
+                    </span>
+                </div>
+                <div class="space-y-4">
+                    <!-- Bid control -->
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600 font-semibold">Bid:</span>
+                        <div class="flex items-center space-x-2">
+                            <button class="decrement-btn" data-type="bid" data-player="${player.name.replace(/\s+/g, '-')}" data-round="${roundIndex}">-</button>
+                            <input type="number" id="bid-${player.name.replace(/\s+/g, '-')}-${roundIndex}" class="w-16 text-center text-lg font-semibold rounded-lg border-gray-300 border-2" value="0" min="0" max="${maxVal}">
+                            <button class="increment-btn" data-type="bid" data-player="${player.name.replace(/\s+/g, '-')}" data-round="${roundIndex}">+</button>
+                        </div>
+                    </div>
+                    <!-- Tricks Taken control -->
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600 font-semibold">Tricks Taken:</span>
+                        <div class="flex items-center space-x-2">
+                            <button class="decrement-btn" data-type="tricks" data-player="${player.name.replace(/\s+/g, '-')}" data-round="${roundIndex}">-</button>
+                            <input type="number" id="tricks-${player.name.replace(/\s+/g, '-')}-${roundIndex}" class="w-16 text-center text-lg font-semibold rounded-lg border-gray-300 border-2" value="0" min="0" max="${maxVal}">
+                            <button class="increment-btn" data-type="tricks" data-player="${player.name.replace(/\s+/g, '-')}" data-round="${roundIndex}">+</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            card.querySelectorAll('.increment-btn, .decrement-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const type = e.currentTarget.dataset.type;
+                    const playerName = e.currentTarget.dataset.player;
+                    const round = e.currentTarget.dataset.round;
+                    const inputId = `${type}-${playerName}-${round}`;
+                    const input = document.getElementById(inputId);
+                    const value = parseInt(input.value, 10);
+                    const isIncrement = e.currentTarget.textContent === '+';
+
+                    let newValue = isIncrement ? value + 1 : value - 1;
+                    if (newValue < 0) newValue = 0;
+                    if (newValue > maxVal) newValue = maxVal;
+                    
+                    input.value = newValue;
+                });
+            });
+
+            return card;
+        }
+
+        // New function to update the running score table
+        function updateScoreTable() {
+            if (currentRound === 0) {
+                scoreTableContainer.classList.add('hidden');
+                return;
+            } else {
+                scoreTableContainer.classList.remove('hidden');
+            }
+
+            const table = document.createElement('table');
+            table.className = 'score-table';
+            let tableHTML = '<thead><tr><th>Round</th>';
+            players.forEach(player => {
+                tableHTML += `<th colspan="2" class="text-center">${player.name}</th>`;
+            });
+            tableHTML += '</tr><tr><th>Cards</th>';
+            players.forEach(() => {
+                tableHTML += `<th>Bid</th><th>Score</th>`;
+            });
+            tableHTML += '</tr></thead><tbody>';
+
+            // Add rows for each completed round
+            for (let i = 0; i < currentRound; i++) {
+                tableHTML += '<tr>';
+                tableHTML += `<td>${cardsPerRound[i]}</td>`;
+                players.forEach(player => {
+                    tableHTML += `<td>${player.roundData[i].bid}</td><td>${player.roundData[i].score}</td>`;
+                });
+                tableHTML += '</tr>';
+            }
+
+            // Add total score row
+            tableHTML += '<tr class="total-row">';
+            tableHTML += '<td>Total</td>';
+            players.forEach(player => {
+                tableHTML += `<td colspan="2">${player.totalScore}</td>`;
+            });
+            tableHTML += '</tr>';
+
+            tableHTML += '</tbody>';
+            table.innerHTML = tableHTML;
+            
+            scoreTableContainer.innerHTML = ''; // Clear previous content
+            const heading = document.createElement('h3');
+            heading.className = 'text-xl font-semibold text-gray-800 mb-4';
+            heading.textContent = 'Running Score';
+            scoreTableContainer.appendChild(heading);
+            scoreTableContainer.appendChild(table);
+        }
+
+        // Load names on page load
+        loadPlayerNames();
+    });
+</script>
+
+</body>
+</html>
