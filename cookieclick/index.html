@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="An addictive incremental clicker game with stunning visuals and engaging progression mechanics">
+  <meta name="description"
+    content="An addictive incremental clicker game with stunning visuals and engaging progression mechanics">
   <title>Cookie Empire - Incremental Clicker Game</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <!-- Header -->
   <header>
@@ -20,7 +23,7 @@
   <!-- Main Game Container -->
   <div class="container">
     <div class="game-layout">
-      
+
       <!-- Left Column: Clicker & Stats -->
       <div>
         <!-- Clicker Section -->
@@ -29,7 +32,7 @@
             🍪
             <span class="click-value">+<span id="clickValue">1</span> per click</span>
           </button>
-          
+
           <!-- Stats Section -->
           <div class="stats-section">
             <h2>Statistics</h2>
@@ -69,7 +72,7 @@
       <!-- Right Column: Upgrades -->
       <aside class="upgrades-section">
         <h2>Upgrades</h2>
-        
+
         <!-- Click Upgrades -->
         <div class="upgrade-category">
           <h3>🖱️ Click Power</h3>
@@ -100,9 +103,22 @@
   <!-- Hidden Import Input -->
   <input type="file" id="importInput" accept=".json" style="display: none;">
 
+  <!-- Reset Confirmation Modal -->
+  <div id="resetModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>⚠️ Reset Game?</h2>
+      <p>Are you sure you want to reset? This will delete all progress!</p>
+      <div class="modal-buttons">
+        <button class="btn btn-danger" id="confirmReset">Yes, Reset Everything</button>
+        <button class="btn btn-primary" id="cancelReset">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="upgrades.js"></script>
   <script src="game.js"></script>
   <script src="ui.js"></script>
 </body>
+
 </html>
