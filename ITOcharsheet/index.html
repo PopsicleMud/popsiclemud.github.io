@@ -122,8 +122,12 @@
                     // Migration for inventory string to array
                     if (typeof c.inventory === 'string') {
                         const oldInv = c.inventory;
-                        c.inventory = Array(10).fill("");
+                        c.inventory = Array(10).fill(null).map(() => ({ name: "", bulky: false }));
                         c.notes = (c.notes || "") + (oldInv ? "\n\nOld Inventory:\n" + oldInv : "");
+                    }
+                    // Migration for inventory array of strings to array of objects
+                    if (Array.isArray(c.inventory) && typeof c.inventory[0] === 'string') {
+                        c.inventory = c.inventory.map(item => ({ name: item || "", bulky: false }));
                     }
                     if (c.notes === undefined) c.notes = "";
                 });
@@ -149,7 +153,7 @@
                 hpCur: 3,
                 hpMax: 3,
                 armor: 0,
-                inventory: Array(10).fill(""),
+                inventory: Array(10).fill(null).map(() => ({ name: "", bulky: false })),
                 notes: ""
             };
         }
@@ -164,9 +168,14 @@
             for (let i = 0; i < 10; i++) {
                 const slot = document.createElement('div');
                 slot.className = 'inventory-slot';
+                slot.id = `slot-container-${i}`;
                 slot.innerHTML = `
                     <span class="slot-num">${i + 1}</span>
-                    <input type="text" id="slot-${i}" oninput="updateInventory(${i}, this.value)">
+                    <input type="text" id="slot-name-${i}" oninput="updateInventory(${i}, 'name', this.value)">
+                    <label class="bulky-check">
+                        <input type="checkbox" id="slot-bulky-${i}" onchange="updateInventory(${i}, 'bulky', this.checked)">
+                        Bulky
+                    </label>
                 `;
                 grid.appendChild(slot);
             }
@@ -197,8 +206,17 @@
 
             // Load inventory
             for (let i = 0; i < 10; i++) {
-                const slotInput = document.getElementById(`slot-${i}`);
-                if (slotInput) slotInput.value = c.inventory[i] || "";
+                const item = c.inventory[i] || { name: "", bulky: false };
+                const nameInput = document.getElementById(`slot-name-${i}`);
+                const bulkyCheck = document.getElementById(`slot-bulky-${i}`);
+                const container = document.getElementById(`slot-container-${i}`);
+
+                if (nameInput) nameInput.value = item.name;
+                if (bulkyCheck) bulkyCheck.checked = item.bulky;
+                if (container) {
+                    if (item.bulky) container.classList.add('is-bulky');
+                    else container.classList.remove('is-bulky');
+                }
             }
 
             // Visual feedback
@@ -216,8 +234,13 @@
             save();
         }
 
-        function updateInventory(index, value) {
-            state.characters[state.currentIndex].inventory[index] = value;
+        function updateInventory(index, field, value) {
+            state.characters[state.currentIndex].inventory[index][field] = value;
+            if (field === 'bulky') {
+                const container = document.getElementById(`slot-container-${index}`);
+                if (value) container.classList.add('is-bulky');
+                else container.classList.remove('is-bulky');
+            }
             save();
         }
 
@@ -271,10 +294,10 @@
             const weapons = ["Sword (d6)", "Bow (d6)", "Club (d6)", "Pistol (d6)"];
             const tools = ["Lantern & Oil", "Rope (10m)", "Crowbar", "Caltrops"];
 
-            c.inventory = Array(10).fill("");
-            c.inventory[0] = weapons[Math.floor(Math.random() * weapons.length)];
-            c.inventory[1] = tools[Math.floor(Math.random() * tools.length)];
-            c.inventory[2] = "Rations";
+            c.inventory = Array(10).fill(null).map(() => ({ name: "", bulky: false }));
+            c.inventory[0].name = weapons[Math.floor(Math.random() * weapons.length)];
+            c.inventory[1].name = tools[Math.floor(Math.random() * tools.length)];
+            c.inventory[2].name = "Rations";
 
             save();
             loadCurrentCharacter();
@@ -306,8 +329,11 @@
                         state.characters.forEach(c => {
                             if (typeof c.inventory === 'string') {
                                 const oldInv = c.inventory;
-                                c.inventory = Array(10).fill("");
+                                c.inventory = Array(10).fill(null).map(() => ({ name: "", bulky: false }));
                                 c.notes = (c.notes || "") + (oldInv ? "\n\nOld Inventory:\n" + oldInv : "");
+                            }
+                            if (Array.isArray(c.inventory) && typeof c.inventory[0] === 'string') {
+                                c.inventory = c.inventory.map(item => ({ name: item || "", bulky: false }));
                             }
                         });
                         save();

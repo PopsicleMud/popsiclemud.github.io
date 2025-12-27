@@ -230,6 +230,7 @@ header {
     align-items: center;
     border-bottom: 1px solid rgba(26, 26, 26, 0.2);
     padding: 5px 0;
+    gap: 5px;
 }
 
 .slot-num {
@@ -240,14 +241,44 @@ header {
     flex-shrink: 0;
 }
 
-.inventory-slot input {
-    width: 100%;
+.inventory-slot input[type="text"] {
+    flex-grow: 1;
     border: none;
     background: transparent;
     font-family: var(--font-mono);
     font-size: 1rem;
     color: var(--parchment-ink);
     outline: none;
+}
+
+.bulky-check {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.7rem;
+    font-family: var(--font-main);
+    text-transform: uppercase;
+    opacity: 0.4;
+    cursor: pointer;
+    user-select: none;
+}
+
+.bulky-check:hover {
+    opacity: 1;
+}
+
+.bulky-check input {
+    cursor: pointer;
+}
+
+.inventory-slot.is-bulky {
+    background: rgba(255, 77, 77, 0.05);
+}
+
+.inventory-slot.is-bulky .bulky-check {
+    opacity: 1;
+    color: var(--accent-dim);
+    font-weight: bold;
 }
 
 .notes-area {
