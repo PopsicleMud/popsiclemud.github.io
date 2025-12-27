@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Into the Odd // Character Sheet</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Special+Elite&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <nav class="nav-bar">
+            <div class="char-controls">
+                <select id="charList" onchange="switchCharacter()"></select>
+                <button onclick="addCharacter()">+ New</button>
+                <button onclick="randomizeCharacter()" title="Generate Random Character">🎲</button>
+            </div>
+            <div class="file-controls">
+                <button onclick="exportData()">Export</button>
+                <button onclick="document.getElementById('importFile').click()">Import</button>
+                <input type="file" id="importFile" style="display:none" onchange="importData(event)">
+                <button onclick="deleteCharacter()" style="color: var(--accent)">Delete</button>
+            </div>
+        </nav>
+
+        <main class="sheet" id="sheetBody">
+            <header>
+                <input type="text" id="charName" placeholder="NAMELESS EXPLORER"
+                    oninput="updateField('name', this.value)">
+            </header>
+
+            <div class="stats-row">
+                <div class="stat-box">
+                    <label>Strength</label>
+                    <div class="stat-inputs">
+                        <input type="number" id="strCur" placeholder="10" oninput="updateField('strCur', this.value)">
+                        <span>/</span>
+                        <input type="number" id="strMax" placeholder="10" oninput="updateField('strMax', this.value)">
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <label>Dexterity</label>
+                    <div class="stat-inputs">
+                        <input type="number" id="dexCur" placeholder="10" oninput="updateField('dexCur', this.value)">
+                        <span>/</span>
+                        <input type="number" id="dexMax" placeholder="10" oninput="updateField('dexMax', this.value)">
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <label>Willpower</label>
+                    <div class="stat-inputs">
+                        <input type="number" id="wilCur" placeholder="10" oninput="updateField('wilCur', this.value)">
+                        <span>/</span>
+                        <input type="number" id="wilMax" placeholder="10" oninput="updateField('wilMax', this.value)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="vitals-row">
+                <div class="vital-box">
+                    <label>Hit Points</label>
+                    <div class="hp-inputs">
+                        <input type="number" id="hpCur" placeholder="3" oninput="updateField('hpCur', this.value)">
+                        <span>/</span>
+                        <input type="number" id="hpMax" placeholder="3" oninput="updateField('hpMax', this.value)">
+                    </div>
+                </div>
+                <div class="vital-box">
+                    <label>Armor</label>
+                    <input type="number" id="armor" placeholder="0"
+                        style="width: 50px; text-align: center; font-size: 2rem; border: none; background: transparent; font-family: var(--font-mono);"
+                        oninput="updateField('armor', this.value)">
+                </div>
+            </div>
+
+            <div class="section-header">Inventory</div>
+            <div class="inventory-grid" id="inventoryGrid">
+                <!-- Slots 1-10 will be generated here -->
+            </div>
+
+            <div class="section-header">Notes & Background</div>
+            <textarea id="notes" class="notes-area"
+                placeholder="Character background, allies, enemies, and other details..."
+                oninput="updateField('notes', this.value)"></textarea>
+        </main>
+    </div>
+
+    <script>
+        let state = {
+            characters: [],
+            currentIndex: 0
+        };
+
+        const STORAGE_KEY = 'ito_app_state';
+
+        // --- Core Logic ---
+
+        function init() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                state = JSON.parse(saved);
+                // Migrations
+                state.characters.forEach(c => {
+                    // Migration for old characters without Max stats
+                    if (c.str && !c.strMax) {
+                        c.strCur = c.str;
+                        c.strMax = c.str;
+                        c.dexCur = c.dex;
+                        c.dexMax = c.dex;
+                        c.wilCur = c.wil;
+                        c.wilMax = c.wil;
+                        delete c.str;
+                        delete c.dex;
+                        delete c.wil;
+                    }
+                    // Migration for inventory string to array
+                    if (typeof c.inventory === 'string') {
+                        const oldInv = c.inventory;
+                        c.inventory = Array(10).fill("");
+                        c.notes = (c.notes || "") + (oldInv ? "\n\nOld Inventory:\n" + oldInv : "");
+                    }
+                    if (c.notes === undefined) c.notes = "";
+                });
+            } else {
+                state.characters = [createDefaultChar()];
+                state.currentIndex = 0;
+            }
+            renderInventorySlots();
+            renderCharList();
+            loadCurrentCharacter();
+        }
+
+        function createDefaultChar() {
+            return {
+                id: Date.now(),
+                name: "New Explorer",
+                strCur: 10,
+                strMax: 10,
+                dexCur: 10,
+                dexMax: 10,
+                wilCur: 10,
+                wilMax: 10,
+                hpCur: 3,
+                hpMax: 3,
+                armor: 0,
+                inventory: Array(10).fill(""),
+                notes: ""
+            };
+        }
+
+        function save() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function renderInventorySlots() {
+            const grid = document.getElementById('inventoryGrid');
+            grid.innerHTML = "";
+            for (let i = 0; i < 10; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'inventory-slot';
+                slot.innerHTML = `
+                    <span class="slot-num">${i + 1}</span>
+                    <input type="text" id="slot-${i}" oninput="updateInventory(${i}, this.value)">
+                `;
+                grid.appendChild(slot);
+            }
+        }
+
+        function renderCharList() {
+            const list = document.getElementById('charList');
+            list.innerHTML = state.characters.map((c, i) =>
+                `<option value="${i}" ${i === state.currentIndex ? 'selected' : ''}>${c.name || 'Unnamed'}</option>`
+            ).join('');
+        }
+
+        function loadCurrentCharacter() {
+            const c = state.characters[state.currentIndex];
+            if (!c) return;
+
+            document.getElementById('charName').value = c.name;
+            document.getElementById('strCur').value = c.strCur;
+            document.getElementById('strMax').value = c.strMax;
+            document.getElementById('dexCur').value = c.dexCur;
+            document.getElementById('dexMax').value = c.dexMax;
+            document.getElementById('wilCur').value = c.wilCur;
+            document.getElementById('wilMax').value = c.wilMax;
+            document.getElementById('hpCur').value = c.hpCur;
+            document.getElementById('hpMax').value = c.hpMax;
+            document.getElementById('armor').value = c.armor;
+            document.getElementById('notes').value = c.notes || "";
+
+            // Load inventory
+            for (let i = 0; i < 10; i++) {
+                const slotInput = document.getElementById(`slot-${i}`);
+                if (slotInput) slotInput.value = c.inventory[i] || "";
+            }
+
+            // Visual feedback
+            const sheet = document.getElementById('sheetBody');
+            sheet.style.animation = 'none';
+            sheet.offsetHeight; // trigger reflow
+            sheet.style.animation = null;
+        }
+
+        function updateField(field, value) {
+            state.characters[state.currentIndex][field] = value;
+            if (field === 'name') {
+                document.getElementById('charList').options[state.currentIndex].text = value || 'Unnamed';
+            }
+            save();
+        }
+
+        function updateInventory(index, value) {
+            state.characters[state.currentIndex].inventory[index] = value;
+            save();
+        }
+
+        function switchCharacter() {
+            state.currentIndex = parseInt(document.getElementById('charList').value);
+            save();
+            loadCurrentCharacter();
+        }
+
+        function addCharacter() {
+            state.characters.push(createDefaultChar());
+            state.currentIndex = state.characters.length - 1;
+            save();
+            renderCharList();
+            loadCurrentCharacter();
+        }
+
+        function deleteCharacter() {
+            if (state.characters.length <= 1) return alert("Keep at least one explorer.");
+            if (confirm("Abandon this explorer to the Odd?")) {
+                state.characters.splice(state.currentIndex, 1);
+                state.currentIndex = 0;
+                save();
+                renderCharList();
+                loadCurrentCharacter();
+            }
+        }
+
+        // --- Randomizer (Into the Odd Rules) ---
+
+        function d6() {
+            return Math.floor(Math.random() * 6) + 1;
+        }
+
+        function roll3d6() {
+            return d6() + d6() + d6();
+        }
+
+        function randomizeCharacter() {
+            const c = state.characters[state.currentIndex];
+            c.strMax = roll3d6();
+            c.strCur = c.strMax;
+            c.dexMax = roll3d6();
+            c.dexCur = c.dexMax;
+            c.wilMax = roll3d6();
+            c.wilCur = c.wilMax;
+            c.hpMax = d6();
+            c.hpCur = c.hpMax;
+
+            // Starter gear logic
+            const weapons = ["Sword (d6)", "Bow (d6)", "Club (d6)", "Pistol (d6)"];
+            const tools = ["Lantern & Oil", "Rope (10m)", "Crowbar", "Caltrops"];
+
+            c.inventory = Array(10).fill("");
+            c.inventory[0] = weapons[Math.floor(Math.random() * weapons.length)];
+            c.inventory[1] = tools[Math.floor(Math.random() * tools.length)];
+            c.inventory[2] = "Rations";
+
+            save();
+            loadCurrentCharacter();
+        }
+
+        // --- Import / Export ---
+
+        function exportData() {
+            const blob = new Blob([JSON.stringify(state)], {
+                type: 'application/json'
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ito_roster_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported.characters) {
+                        state = imported;
+                        // Run migrations on imported data
+                        state.characters.forEach(c => {
+                            if (typeof c.inventory === 'string') {
+                                const oldInv = c.inventory;
+                                c.inventory = Array(10).fill("");
+                                c.notes = (c.notes || "") + (oldInv ? "\n\nOld Inventory:\n" + oldInv : "");
+                            }
+                        });
+                        save();
+                        renderCharList();
+                        loadCurrentCharacter();
+                    }
+                } catch (err) {
+                    alert("Invalid save file.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
