@@ -235,6 +235,54 @@ header {
     opacity: 0.4;
 }
 
+/* --- Weapons --- */
+.weapons-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.weapon-slot {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px;
+    align-items: center;
+    gap: 15px;
+    border-bottom: 1px solid rgba(26, 26, 26, 0.2);
+    padding: 8px 0;
+}
+
+.weapon-slot input[type="text"] {
+    border: none;
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    color: var(--parchment-ink);
+    outline: none;
+}
+
+.weapon-damage {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.weapon-damage label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    opacity: 0.5;
+}
+
+.weapon-damage input {
+    width: 40px;
+    border: none;
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    text-align: center;
+    outline: none;
+}
+
 /* --- Inventory & Notes --- */
 .section-header {
     background: var(--parchment-ink);
@@ -299,19 +347,22 @@ header {
     cursor: pointer;
 }
 
-.inventory-slot.is-bulky {
+.inventory-slot.is-bulky,
+.weapon-slot.is-bulky {
     background: rgba(255, 77, 77, 0.05);
 }
 
-.inventory-slot.is-bulky .bulky-check {
+.inventory-slot.is-bulky .bulky-check,
+.weapon-slot.is-bulky .bulky-check {
     opacity: 1;
     color: var(--accent-dim);
     font-weight: bold;
 }
 
+.arcana-area,
 .notes-area {
     width: 100%;
-    min-height: 150px;
+    min-height: 100px;
     background: transparent;
     border: 1px dashed var(--parchment-ink);
     font-family: var(--font-mono);
@@ -320,6 +371,11 @@ header {
     resize: vertical;
     outline: none;
     font-size: 1rem;
+    margin-bottom: 20px;
+}
+
+.notes-area {
+    min-height: 150px;
 }
 
 @media (max-width: 600px) {
@@ -357,6 +413,15 @@ header {
 
     .inventory-grid {
         grid-template-columns: 1fr;
+    }
+
+    .weapon-slot {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .weapon-slot input[type="text"] {
+        grid-column: span 2;
     }
 
     .stat-inputs input {

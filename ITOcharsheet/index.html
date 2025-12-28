@@ -89,6 +89,15 @@
                 </div>
             </div>
 
+            <div class="section-header">Weapons</div>
+            <div class="weapons-grid" id="weaponsGrid">
+                <!-- 3 Weapon slots will be generated here -->
+            </div>
+
+            <div class="section-header">Arcana</div>
+            <textarea id="arcana" class="arcana-area" placeholder="Spells, artifacts, and mysterious items..."
+                oninput="updateField('arcana', this.value)"></textarea>
+
             <div class="section-header">Inventory</div>
             <div class="inventory-grid" id="inventoryGrid">
                 <!-- Slots 1-10 will be generated here -->
@@ -119,15 +128,10 @@
                 state.characters.forEach(c => {
                     // Migration for old characters without Max stats
                     if (c.str && !c.strMax) {
-                        c.strCur = c.str;
-                        c.strMax = c.str;
-                        c.dexCur = c.dex;
-                        c.dexMax = c.dex;
-                        c.wilCur = c.wil;
-                        c.wilMax = c.wil;
-                        delete c.str;
-                        delete c.dex;
-                        delete c.wil;
+                        c.strCur = c.str; c.strMax = c.str;
+                        c.dexCur = c.dex; c.dexMax = c.dex;
+                        c.wilCur = c.wil; c.wilMax = c.wil;
+                        delete c.str; delete c.dex; delete c.wil;
                     }
                     // Migration for inventory string to array
                     if (typeof c.inventory === 'string') {
@@ -141,12 +145,18 @@
                     }
                     // Migration for experience field
                     if (c.experience === undefined) c.experience = "Novice";
+                    // Migration for Weapons and Arcana
+                    if (c.weapons === undefined) {
+                        c.weapons = Array(3).fill(null).map(() => ({ name: "", damage: "", bulky: false }));
+                    }
+                    if (c.arcana === undefined) c.arcana = "";
                     if (c.notes === undefined) c.notes = "";
                 });
             } else {
                 state.characters = [createDefaultChar()];
                 state.currentIndex = 0;
             }
+            renderWeaponSlots();
             renderInventorySlots();
             renderCharList();
             loadCurrentCharacter();
@@ -157,15 +167,13 @@
                 id: Date.now(),
                 name: "New Explorer",
                 experience: "Novice",
-                strCur: 10,
-                strMax: 10,
-                dexCur: 10,
-                dexMax: 10,
-                wilCur: 10,
-                wilMax: 10,
-                hpCur: 3,
-                hpMax: 3,
+                strCur: 10, strMax: 10,
+                dexCur: 10, dexMax: 10,
+                wilCur: 10, wilMax: 10,
+                hpCur: 3, hpMax: 3,
                 armor: 0,
+                weapons: Array(3).fill(null).map(() => ({ name: "", damage: "", bulky: false })),
+                arcana: "",
                 inventory: Array(10).fill(null).map(() => ({ name: "", bulky: false })),
                 notes: ""
             };
@@ -173,6 +181,28 @@
 
         function save() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function renderWeaponSlots() {
+            const grid = document.getElementById('weaponsGrid');
+            grid.innerHTML = "";
+            for (let i = 0; i < 3; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'weapon-slot';
+                slot.id = `weapon-container-${i}`;
+                slot.innerHTML = `
+                    <input type="text" id="weapon-name-${i}" placeholder="Weapon Name" oninput="updateWeapon(${i}, 'name', this.value)">
+                    <div class="weapon-damage">
+                        <label>Dmg</label>
+                        <input type="text" id="weapon-damage-${i}" placeholder="d6" oninput="updateWeapon(${i}, 'damage', this.value)">
+                    </div>
+                    <label class="bulky-check">
+                        <input type="checkbox" id="weapon-bulky-${i}" onchange="updateWeapon(${i}, 'bulky', this.checked)">
+                        Bulky
+                    </label>
+                `;
+                grid.appendChild(slot);
+            }
         }
 
         function renderInventorySlots() {
@@ -216,21 +246,28 @@
             document.getElementById('hpCur').value = c.hpCur;
             document.getElementById('hpMax').value = c.hpMax;
             document.getElementById('armor').value = c.armor;
+            document.getElementById('arcana').value = c.arcana || "";
             document.getElementById('notes').value = c.notes || "";
+
+            // Load weapons
+            for (let i = 0; i < 3; i++) {
+                const w = c.weapons[i] || { name: "", damage: "", bulky: false };
+                document.getElementById(`weapon-name-${i}`).value = w.name;
+                document.getElementById(`weapon-damage-${i}`).value = w.damage;
+                document.getElementById(`weapon-bulky-${i}`).checked = w.bulky;
+                const container = document.getElementById(`weapon-container-${i}`);
+                if (w.bulky) container.classList.add('is-bulky');
+                else container.classList.remove('is-bulky');
+            }
 
             // Load inventory
             for (let i = 0; i < 10; i++) {
                 const item = c.inventory[i] || { name: "", bulky: false };
-                const nameInput = document.getElementById(`slot-name-${i}`);
-                const bulkyCheck = document.getElementById(`slot-bulky-${i}`);
+                document.getElementById(`slot-name-${i}`).value = item.name;
+                document.getElementById(`slot-bulky-${i}`).checked = item.bulky;
                 const container = document.getElementById(`slot-container-${i}`);
-
-                if (nameInput) nameInput.value = item.name;
-                if (bulkyCheck) bulkyCheck.checked = item.bulky;
-                if (container) {
-                    if (item.bulky) container.classList.add('is-bulky');
-                    else container.classList.remove('is-bulky');
-                }
+                if (item.bulky) container.classList.add('is-bulky');
+                else container.classList.remove('is-bulky');
             }
 
             // Visual feedback
@@ -244,6 +281,16 @@
             state.characters[state.currentIndex][field] = value;
             if (field === 'name') {
                 document.getElementById('charList').options[state.currentIndex].text = value || 'Unnamed';
+            }
+            save();
+        }
+
+        function updateWeapon(index, field, value) {
+            state.characters[state.currentIndex].weapons[index][field] = value;
+            if (field === 'bulky') {
+                const container = document.getElementById(`weapon-container-${index}`);
+                if (value) container.classList.add('is-bulky');
+                else container.classList.remove('is-bulky');
             }
             save();
         }
@@ -295,24 +342,31 @@
 
         function randomizeCharacter() {
             const c = state.characters[state.currentIndex];
-            c.strMax = roll3d6();
-            c.strCur = c.strMax;
-            c.dexMax = roll3d6();
-            c.dexCur = c.dexMax;
-            c.wilMax = roll3d6();
-            c.wilCur = c.wilMax;
-            c.hpMax = d6();
-            c.hpCur = c.hpMax;
+            c.strMax = roll3d6(); c.strCur = c.strMax;
+            c.dexMax = roll3d6(); c.dexCur = c.dexMax;
+            c.wilMax = roll3d6(); c.wilCur = c.wilMax;
+            c.hpMax = d6(); c.hpCur = c.hpMax;
             c.experience = "Novice";
 
             // Starter gear logic
-            const weapons = ["Sword (d6)", "Bow (d6)", "Club (d6)", "Pistol (d6)"];
+            const weapons = [
+                { name: "Sword", dmg: "d6" },
+                { name: "Bow", dmg: "d6" },
+                { name: "Club", dmg: "d6" },
+                { name: "Pistol", dmg: "d6" }
+            ];
             const tools = ["Lantern & Oil", "Rope (10m)", "Crowbar", "Caltrops"];
 
+            c.weapons = Array(3).fill(null).map(() => ({ name: "", damage: "", bulky: false }));
+            const randWep = weapons[Math.floor(Math.random() * weapons.length)];
+            c.weapons[0] = { name: randWep.name, damage: randWep.dmg, bulky: false };
+
             c.inventory = Array(10).fill(null).map(() => ({ name: "", bulky: false }));
-            c.inventory[0].name = weapons[Math.floor(Math.random() * weapons.length)];
-            c.inventory[1].name = tools[Math.floor(Math.random() * tools.length)];
-            c.inventory[2].name = "Rations";
+            c.inventory[0].name = tools[Math.floor(Math.random() * tools.length)];
+            c.inventory[1].name = "Rations";
+
+            c.arcana = "";
+            c.notes = "";
 
             save();
             loadCurrentCharacter();
@@ -321,9 +375,7 @@
         // --- Import / Export ---
 
         function exportData() {
-            const blob = new Blob([JSON.stringify(state)], {
-                type: 'application/json'
-            });
+            const blob = new Blob([JSON.stringify(state)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -351,6 +403,10 @@
                                 c.inventory = c.inventory.map(item => ({ name: item || "", bulky: false }));
                             }
                             if (c.experience === undefined) c.experience = "Novice";
+                            if (c.weapons === undefined) {
+                                c.weapons = Array(3).fill(null).map(() => ({ name: "", damage: "", bulky: false }));
+                            }
+                            if (c.arcana === undefined) c.arcana = "";
                         });
                         save();
                         renderCharList();
