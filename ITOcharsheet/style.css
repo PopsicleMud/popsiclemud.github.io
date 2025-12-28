@@ -101,16 +101,44 @@ header {
     border-bottom: 3px solid var(--parchment-ink);
     margin-bottom: 30px;
     padding-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
 }
 
 #charName {
     font-family: var(--font-mono);
     font-size: 2.5rem;
-    width: 100%;
+    width: 70%;
     border: none;
     background: transparent;
     color: var(--parchment-ink);
     text-transform: uppercase;
+    outline: none;
+}
+
+.exp-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+.exp-container label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: bold;
+    opacity: 0.6;
+}
+
+#experience {
+    background: transparent;
+    border: 1px solid rgba(26, 26, 26, 0.2);
+    color: var(--parchment-ink);
+    padding: 4px 8px;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
     outline: none;
 }
 
@@ -299,6 +327,26 @@ header {
         padding: 20px;
     }
 
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    #charName {
+        width: 100%;
+        font-size: 1.8rem;
+    }
+
+    .exp-container {
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    #experience {
+        width: 100%;
+    }
+
     .stats-row {
         grid-template-columns: 1fr;
     }
@@ -309,10 +357,6 @@ header {
 
     .inventory-grid {
         grid-template-columns: 1fr;
-    }
-
-    #charName {
-        font-size: 1.8rem;
     }
 
     .stat-inputs input {

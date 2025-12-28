@@ -33,6 +33,16 @@
             <header>
                 <input type="text" id="charName" placeholder="NAMELESS EXPLORER"
                     oninput="updateField('name', this.value)">
+                <div class="exp-container">
+                    <label for="experience">Experience</label>
+                    <select id="experience" onchange="updateField('experience', this.value)">
+                        <option value="Novice">Novice (0 XP)</option>
+                        <option value="Professional">Professional (1 XP)</option>
+                        <option value="Veteran">Veteran (3 XP)</option>
+                        <option value="Master">Master (10 XP)</option>
+                        <option value="Legend">Legend (25 XP)</option>
+                    </select>
+                </div>
             </header>
 
             <div class="stats-row">
@@ -129,6 +139,8 @@
                     if (Array.isArray(c.inventory) && typeof c.inventory[0] === 'string') {
                         c.inventory = c.inventory.map(item => ({ name: item || "", bulky: false }));
                     }
+                    // Migration for experience field
+                    if (c.experience === undefined) c.experience = "Novice";
                     if (c.notes === undefined) c.notes = "";
                 });
             } else {
@@ -144,6 +156,7 @@
             return {
                 id: Date.now(),
                 name: "New Explorer",
+                experience: "Novice",
                 strCur: 10,
                 strMax: 10,
                 dexCur: 10,
@@ -193,6 +206,7 @@
             if (!c) return;
 
             document.getElementById('charName').value = c.name;
+            document.getElementById('experience').value = c.experience || "Novice";
             document.getElementById('strCur').value = c.strCur;
             document.getElementById('strMax').value = c.strMax;
             document.getElementById('dexCur').value = c.dexCur;
@@ -289,6 +303,7 @@
             c.wilCur = c.wilMax;
             c.hpMax = d6();
             c.hpCur = c.hpMax;
+            c.experience = "Novice";
 
             // Starter gear logic
             const weapons = ["Sword (d6)", "Bow (d6)", "Club (d6)", "Pistol (d6)"];
@@ -335,6 +350,7 @@
                             if (Array.isArray(c.inventory) && typeof c.inventory[0] === 'string') {
                                 c.inventory = c.inventory.map(item => ({ name: item || "", bulky: false }));
                             }
+                            if (c.experience === undefined) c.experience = "Novice";
                         });
                         save();
                         renderCharList();
