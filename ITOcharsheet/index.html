@@ -89,6 +89,22 @@
                 </div>
             </div>
 
+            <div class="section-header">Money</div>
+            <div class="money-grid">
+                <div class="money-slot">
+                    <label>Pennies</label>
+                    <input type="number" id="pennies" placeholder="0" oninput="updateMoney('pennies', this.value)">
+                </div>
+                <div class="money-slot">
+                    <label>Shillings</label>
+                    <input type="number" id="shillings" placeholder="0" oninput="updateMoney('shillings', this.value)">
+                </div>
+                <div class="money-slot">
+                    <label>Guilders</label>
+                    <input type="number" id="guilders" placeholder="0" oninput="updateMoney('guilders', this.value)">
+                </div>
+            </div>
+
             <div class="section-header">Weapons</div>
             <div class="weapons-grid" id="weaponsGrid">
                 <!-- 3 Weapon slots will be generated here -->
@@ -183,6 +199,9 @@
                     }
                     if (c.arcana === undefined) { c.arcana = ""; needsSave = true; }
                     if (c.notes === undefined) { c.notes = ""; needsSave = true; }
+                    if (c.pennies === undefined) { c.pennies = 0; needsSave = true; }
+                    if (c.shillings === undefined) { c.shillings = 0; needsSave = true; }
+                    if (c.guilders === undefined) { c.guilders = 0; needsSave = true; }
                     if (!c.id) { c.id = generateId(); needsSave = true; }
                 });
                 if (needsSave) save();
@@ -207,6 +226,9 @@
                 wilCur: 10, wilMax: 10,
                 hpCur: 3, hpMax: 3,
                 armor: 0,
+                pennies: 0,
+                shillings: 0,
+                guilders: 0,
                 weapons: Array(3).fill(null).map(() => ({ name: "", damage: "", bulky: false })),
                 arcana: "",
                 inventory: Array(10).fill(null).map(() => ({ name: "", bulky: false })),
@@ -281,6 +303,9 @@
             document.getElementById('hpCur').value = c.hpCur;
             document.getElementById('hpMax').value = c.hpMax;
             document.getElementById('armor').value = c.armor;
+            document.getElementById('pennies').value = c.pennies || 0;
+            document.getElementById('shillings').value = c.shillings || 0;
+            document.getElementById('guilders').value = c.guilders || 0;
             document.getElementById('arcana').value = c.arcana || "";
             document.getElementById('notes').value = c.notes || "";
 
@@ -334,6 +359,11 @@
                 if (value) container.classList.add('is-bulky');
                 else container.classList.remove('is-bulky');
             }
+            save();
+        }
+
+        function updateMoney(field, value) {
+            state.characters[state.currentIndex][field] = parseInt(value) || 0;
             save();
         }
 

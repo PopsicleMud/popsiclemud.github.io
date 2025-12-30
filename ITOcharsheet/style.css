@@ -235,6 +235,40 @@ header {
     opacity: 0.4;
 }
 
+/* --- Money --- */
+.money-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.money-slot {
+    border: 2px solid var(--parchment-ink);
+    padding: 10px;
+    text-align: center;
+}
+
+.money-slot label {
+    display: block;
+    font-weight: bold;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+}
+
+.money-slot input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    text-align: center;
+    font-size: 1.8rem;
+    font-family: var(--font-mono);
+    color: var(--parchment-ink);
+    outline: none;
+}
+
 /* --- Weapons --- */
 .weapons-grid {
     display: grid;
