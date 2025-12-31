@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Into the Odd Character Generator</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; background-color: #f0f0f0; color: #333; display: flex; justify-content: center; padding: 20px; }
+        .card { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); max-width: 500px; width: 100%; border: 1px solid #000; }
+        h1 { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-top: 0; text-transform: uppercase; letter-spacing: 2px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0; }
+        .stat-box { background: #000; color: #fff; text-align: center; padding: 10px; border-radius: 4px; }
+        .stat-label { font-size: 0.8rem; font-weight: bold; text-transform: uppercase; }
+        .stat-value { font-size: 1.5rem; font-weight: bold; }
+        button { width: 100%; padding: 15px; background: #d00000; color: white; border: none; border-radius: 4px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: #a00000; }
+        .package-section { margin-top: 20px; padding: 15px; border: 2px dashed #000; background: #fff9e6; }
+        .arcanum-section { margin-top: 15px; padding: 10px; background: #e6f3ff; border-left: 5px solid #0056b3; font-style: italic; }
+        .highlight { font-weight: bold; color: #d00000; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Into the Odd</h1>
+    <button onclick="generateCharacter()">Generate Explorer</button>
+
+    <div id="character-sheet" style="display:none;">
+        <div class="stats-grid">
+            <div class="stat-box"><div class="stat-label">STR</div><div id="str" class="stat-value"></div></div>
+            <div class="stat-box"><div class="stat-label">DEX</div><div id="dex" class="stat-value"></div></div>
+            <div class="stat-box"><div class="stat-label">WIL</div><div id="wil" class="stat-value"></div></div>
+            <div class="stat-box"><div class="stat-label">HP</div><div id="hp" class="stat-value"></div></div>
+        </div>
+
+        <div class="package-section">
+            <strong>Starting Equipment:</strong>
+            <p id="gear-list"></p>
+            <div id="arcanum-display" class="arcanum-section" style="display:none;">
+                <strong>Arcanum:</strong> <span id="arcanum-desc"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const starterTable = {
+    "3-9": {
+        1: "Sword (d6), Pistol (d6), Modern Armour. Special: Sense nearby unearthly beings",
+        2: "Musket (d8 B), Sword (d6), Flashbang. Special: Sense nearby Arcana",
+        3: "Musket (d8 B), Club (d6). Special: Immunity to extreme heat and cold",
+        4: "Pistol (d6), Knife (d6). Special: Telepathy if target fails WIL Save",
+        5: "Blunderbuss (d8 B), Hatchet (d6), Mutt. Special: Dreams show undiscovered surroundings",
+        6: "Musket (d8 B), Hatchet (d6), Flashbang, Arcanum. Special: Iron Limb"
+    },
+    10: {
+        1: "Rifle (d8 B), Bayonet (d6), Lighter Boy, Arcanum",
+        2: "Musket (d8 B), Hatchet (d6), Hawk, Arcanum",
+        3: "Musket (d8 B), Protective Gloves, Arcanum",
+        4: "Claymore (d8 B), Pistol (d6), 2 Acid Flasks, Arcanum",
+        5: "Brace of Pistols (d8 B), Steel Wire, Grappling Hook, Arcanum",
+        6: "Rifle (d8 B), Mace (d6), Eagle, Poison"
+    },
+    11: {
+        1: "Rifle (d8 B), Modern Armour, Hound, Arcanum",
+        2: "Hatchet (d6), Pistol (d6), Bolt-Cutters, Arcanum",
+        3: "Musket (d8 B), Mallet, Marbles, Fancy Hat, Arcanum",
+        4: "Musket (d8 B), Bayonet (d6), Mutt with telepathic link",
+        5: "Machete (d6), Brace of Pistols (d8 B), Talking Parrot. Special: Never Sleep",
+        6: "Club (d6), 3 Bombs, Rocket. Special: Darkvision"
+    },
+    12: {
+        1: "Club (d6), Throwing Knives, Arcanum",
+        2: "Musket (d8 B), Mule, Arcanum",
+        3: "Pick-Axe (d6), Manacles, Arcanum",
+        4: "Pistol (d6), Rocket. Special: Toxin-Immune",
+        5: "Harpoon Gun (d8 B), Baton (d6), Acid. Special: Slightly Magnetic",
+        6: "Maul (d8 B), Dagger (d6), Chain"
+    },
+    13: {
+        1: "Pistol (d6), Ether, Poison, Arcanum",
+        2: "Sword (d6), Pistol (d6), Crude Armour",
+        3: "Pistol (d6), Smokebomb, Mutt, Shovel",
+        4: "Musket (d8 B), Portable Ram, Game Set",
+        5: "Bolt-Cutters, Blunderbuss (d8 B), Fiddle",
+        6: "Longaxe (d8 B), Rum, Bomb"
+    },
+    14: {
+        1: "Cane (d6), Acid, Spyglass, Arcanum",
+        2: "Pistol (d6), Bell, Steel Wire, Smoke-bomb",
+        3: "Longaxe (d8 B), Throwing Axes, Fire Oil",
+        4: "Pistol (d6), Saw, Animal Trap, Spyglass",
+        5: "Pistol (d6), Grease, Hand Drill, Drum",
+        6: "Dagger (d6), Fire Oil, Mirror"
+    },
+    15: {
+        1: "Brace of Pistols (d8 B), Canary, Ether",
+        2: "Longaxe (d8 B), Ferret, Fire Oil",
+        3: "Club (d6), Ether, Crowbar, Flute",
+        4: "Bow (d6 B), Knife (d6), Rocket, Fire Oil",
+        5: "Sword & Dagger (d8 B), Magnifying Glass. Special: Lost Eye",
+        6: "Pistol (d6), Knife (d6), Bomb, Saw"
+    },
+    16: {
+        1: "Musket (d8 B), Pocket-watch, Bomb",
+        2: "Staff (d8 B), Tongs, Glue",
+        3: "Hatchet (d6), Net, Fire Oil. Special: Burnt Face",
+        4: "Pistol (d6), Whip (d6), Cigars. Special: Lost Eye",
+        5: "Pistol (d6), Acid, Animal Repellent. Special: Prosthetic Hand",
+        6: "Pistol (d6), Bomb, Shovel. Special: Glowing Eyes"
+    },
+    17: {
+        1: "Halberd (d8 B), Fake Pistol, Artificial Lung",
+        2: "Pistol (d6), Net, Trumpet. Special: Prosthetic Leg",
+        3: "Club (d6), Paint, Crowbar. Special: Loud Lungs",
+        4: "Musket (d8 B), Accordion. Special: No Nose/Scent",
+        5: "Sword (d6), Steel Wire. Special: Ugly Mutation",
+        6: "Staff (d8 B), Throwing Knives (d6)"
+    },
+    18: {
+        1: "Garotte (d6), Musket (d8 B). Special: Mute",
+        2: "Pistol (d6), Grease, Hacksaw. Special: One Arm",
+        3: "Pistol (d6), Cigars, Poison. Special: Fugitive",
+        4: "Sword (d6), Shield. Special: Illiterate",
+        5: "Sword (d6), Ferret, Tattered Clothes. Special: Debt (3g)",
+        6: "Mace (d6), Pigeon. Special: Disfigured"
+    }
+};
+
+const arcanaList = {
+    11: "Gatekeeper’s Sigil: Create a gate between two flat surfaces you can see. Gates close if you pass through or break line of sight.",
+    12: "Pierced Heart: State an object you desire. The heart indicates its direction and vague distance.",
+    13: "Pale Flame: An object you touch glows with white light. Contact causes chilling pain. Wears off when used again.",
+    14: "Soul Chain: Target must pass a DEX Save to avoid your touch, or they lose d6 WIL and you glimpse their current desire.",
+    15: "Gavel of the Unbreakable Seal: One door, window, etc. is sealed until you open it.",
+    16: "Foul Censer: Green smoke surrounds you and everyone within 20ft. Missiles cannot pass through the smoke.",
+    21: "Bleeding Stave: Spews blood-like oil onto a 10ft area. DEX Save or fall and lose move. Disappears if ignited.",
+    22: "Pain Idol: Roll a die of your choice. Odd = you lose that much STR; Even = target loses that much STR.",
+    23: "Webbed Hands: Climb sheer surfaces as if you were a spider.",
+    24: "Sunblessed Bands: Glow and hum. Anyone attacking you suffers damage equal to what they caused you. Ends if you attack.",
+    25: "Flesh-Tome of Babble: Speak a strange language; every living thing can understand and reply in it if they wish.",
+    26: "Tyrant’s Rod: Order a target to drop, fall, flee, or halt unless they pass a WIL Save.",
+    31: "Black Veil: Target must pass a WIL Save or be blinded until you lift the curse or they Rest.",
+    32: "Strands of Suffering: Strands spread between surfaces 20ft apart. Move is slow and painful without a DEX Save.",
+    33: "Heat Ray: One metal object becomes too hot to touch. Wielder takes d8 damage (ignoring armour) if not dropped.",
+    34: "Miniaturisation Coil: Touch an object to shrink it to a tiny miniature. Restore at will. Living beings must be willing.",
+    35: "Frozen Cloud: Floats at your will. Anyone within takes d6 damage and cannot move unless they pass a STR Save.",
+    36: "Many Phase Key: Phase through a wall or floor with any objects you are carrying.",
+    41: "Skull Magnet: Attract or repel a single target that has a boney skull, unless they pass a WIL Save.",
+    42: "Transreal Mirror: Create an independent duplicate of yourself. It cannot interact physically. Lasts until dismissed.",
+    43: "Gorger’s Mask: The wearer can consume anything safely.",
+    44: "Tomb Box: Contains three tiny, agile, and clever skeletons that obey whoever holds the box.",
+    45: "Howling Lantern: Blowing into it causes a roar that terrifies prey animals but attracts predators.",
+    46: "Rainbow Blade: This sword (d6) can fire a beam of harmless light in any colour the wielder wishes.",
+    51: "Hawk of Prosperity: Mechanical bird (3hp, d6 claws) that helps accumulate wealth. Requires 1s/day for food.",
+    52: "Inquisitor’s Hood: Ask a question with two answers. Target must pass WIL Save or answer honestly; if they pass, you blurt a truth.",
+    53: "Winter’s Sickle: Anyone taking damage from this sickle (d6) is Deprived and feels cold until warmed by fire for an hour.",
+    54: "Grief Cup: Anyone drinking from this has upsetting visions showing the consequences of their past actions.",
+    55: "Victory Globe: Swear an oath aloud. It guides you to achieve it, but fail by day's end and lose d12 WIL.",
+    56: "Moon Lens: Look at two objects and ask a question. It highlights the one that best answers (cannot predict future).",
+    61: "Fool’s Coin: Anyone valuing money craves this coin upon first sight. Effect wears off after an hour.",
+    62: "Chance Rose: Crush to change the odds of one action to 50%. Reforms at the start of each day.",
+    63: "Homing Stick: A staff that can be called to return to you, flying by the best route possible.",
+    64: "False Platter: Anyone viewing this sees an illusion of a luxury they are currently craving.",
+    65: "Gold Visor: While wearing this, you visualize a general sense of someone's honesty/sincerity as they speak.",
+    66: "Infinity Icon: You can stop time, but you can only observe and think while time is frozen."
+};
+
+function rollD6() { return Math.floor(Math.random() * 6) + 1; }
+
+function generateCharacter() {
+    const str = rollD6() + rollD6() + rollD6();
+    const dex = rollD6() + rollD6() + rollD6();
+    const wil = rollD6() + rollD6() + rollD6();
+    const hp = rollD6();
+    const maxStat = Math.max(str, dex, wil);
+
+    document.getElementById('str').innerText = str;
+    document.getElementById('dex').innerText = dex;
+    document.getElementById('wil').innerText = wil;
+    document.getElementById('hp').innerText = hp;
+
+    let statKey = maxStat <= 9 ? "3-9" : maxStat;
+    const gear = starterTable[statKey][hp];
+    document.getElementById('gear-list').innerText = gear;
+
+    const arcanumDiv = document.getElementById('arcanum-display');
+    if (gear.includes("Arcanum")) {
+        const d66 = (rollD6() * 10) + rollD6();
+        document.getElementById('arcanum-desc').innerText = arcanaList[d66] || `Roll ${d66} on the Arcana Table (p. 20)`;
+        arcanumDiv.style.display = 'block';
+    } else {
+        arcanumDiv.style.display = 'none';
+    }
+
+    document.getElementById('character-sheet').style.display = 'block';
+}
+</script>
+</body>
+</html>
