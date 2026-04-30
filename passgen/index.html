@@ -69,7 +69,7 @@
         getRandomChars(digits, 4) +
         getRandomChars(lower, 4) +
         getRandomChars(specials, 1);
-        const charArray = str.split(''); // Convert string to array
+        const charArray = password.split(''); // Convert string to array
         shuffleArray(charArray);          // Use the Fisher-Yates function above
         password =  charArray.join('');        // Join back to strin
       //password = shuffle(password);
