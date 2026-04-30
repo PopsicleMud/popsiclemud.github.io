@@ -69,6 +69,7 @@
         getRandomChars(digits, 4) +
         getRandomChars(lower, 4) +
         getRandomChars(specials, 1);
+      password = shuffle(password);
 
       document.getElementById('password').textContent = password;
 
